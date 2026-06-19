@@ -1,0 +1,40 @@
+{
+  "name": "farol-formulario",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "dev:full": "node server/calendar-proxy.mjs & vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server/calendar-proxy.mjs",
+    "calendars:sync": "node scripts/discover-calendars.mjs",
+    "admin:password": "node scripts/set-admin-password.mjs",
+    "test:smoke": "node scripts/smoke-tests.mjs",
+    "test:notifications": "node scripts/test-notification-cron.mjs",
+    "test": "node scripts/smoke-tests.mjs && node scripts/test-notification-cron.mjs",
+    "import:assessores": "node scripts/import-assessores-from-sheet.mjs",
+    "test:whatsapp": "node scripts/test-whatsapp-send.mjs",
+    "cron:notifications": "node scripts/run-notification-cron.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^4.22.2",
+    "framer-motion": "^12.38.0",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.14.0",
+    "pg": "^8.21.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^5.4.21"
+  }
+}

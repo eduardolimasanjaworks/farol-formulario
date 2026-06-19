@@ -1,0 +1,864 @@
+/* ── 1. Layout da página admin de notificações ── */
+.notif-admin-wrap {
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.75rem 1rem 3rem;
+}
+
+.notif-admin-page {
+  width: min(1100px, 96vw);
+  max-width: none !important;
+  padding: 2rem 2.25rem;
+}
+
+.notif-admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.notif-admin-title {
+  font-size: 1.65rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: linear-gradient(90deg, #fff 0%, #c3a457 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.notif-admin-subtitle {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  max-width: 520px;
+  line-height: 1.45;
+}
+
+/* ── 2. Botões sempre redondos (pills) ── */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: none;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.62rem 1.35rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  white-space: nowrap;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.btn-pill:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-pill-primary {
+  background: linear-gradient(135deg, #d4b76a, #c3a457);
+  color: #111327;
+  box-shadow: 0 6px 20px rgba(195, 164, 87, 0.35);
+}
+
+.btn-pill-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(195, 164, 87, 0.45);
+}
+
+.btn-pill-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.btn-pill-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(195, 164, 87, 0.45);
+}
+
+.btn-pill-danger {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ff8a80;
+  border: 1px solid rgba(244, 67, 54, 0.35);
+}
+
+.btn-pill-danger:hover:not(:disabled) {
+  background: rgba(244, 67, 54, 0.28);
+}
+
+.btn-pill-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.btn-pill-step {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(195, 164, 87, 0.18);
+  color: #e8d5a3;
+  border: 1px solid rgba(195, 164, 87, 0.35);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.btn-pill-step:hover:not(:disabled) {
+  background: rgba(195, 164, 87, 0.32);
+}
+
+/* ── 3. Alertas de status ── */
+.notif-alert {
+  border-radius: 999px;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.86rem;
+  margin-bottom: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.notif-alert-success {
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  color: #a5d6a7;
+}
+
+.notif-alert-error {
+  background: rgba(244, 67, 54, 0.12);
+  border: 1px solid rgba(244, 67, 54, 0.35);
+  color: #ffab91;
+}
+
+/* ── 4. Toolbar ── */
+.notif-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.notif-toolbar-count {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+}
+
+/* ── 5. Tabela de notificações (Mensagem | Contato | Data) ── */
+.notif-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(195, 164, 87, 0.28);
+  background: rgba(8, 10, 24, 0.55);
+}
+
+.notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.notif-table thead th {
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c3a457;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(195, 164, 87, 0.08);
+}
+
+.notif-table thead th:nth-child(1) { width: 48%; }
+.notif-table thead th:nth-child(2) { width: 18%; }
+.notif-table thead th:nth-child(3) { width: 24%; }
+.notif-table thead th:nth-child(4) { width: 10%; }
+
+.notif-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease;
+}
+
+.notif-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.notif-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.notif-table-row--inactive {
+  opacity: 0.55;
+}
+
+.notif-table td {
+  vertical-align: top;
+  padding: 1rem;
+}
+
+.notif-table-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.4rem;
+}
+
+.notif-table-message {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-contact-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.notif-contact-badge--cliente {
+  background: rgba(0, 200, 150, 0.2);
+  color: #6dffd4;
+  border: 1px solid rgba(0, 200, 150, 0.45);
+}
+
+.notif-contact-badge--assessor {
+  background: rgba(195, 164, 87, 0.22);
+  color: #ffe6a8;
+  border: 1px solid rgba(195, 164, 87, 0.5);
+}
+
+.notif-contact-badge--terceiro {
+  background: rgba(156, 106, 255, 0.2);
+  color: #dcc8ff;
+  border: 1px solid rgba(156, 106, 255, 0.45);
+}
+
+.notif-table-phone {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.notif-date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.35;
+}
+
+.notif-inactive-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(107, 114, 128, 0.25);
+  color: #9ca3af;
+}
+
+.notif-table-cell-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.notif-table-cell-actions .btn-pill-icon + .btn-pill-icon {
+  margin-left: 0.35rem;
+}
+
+/* legado: colunas por destinatário (só picker do form) */
+.notif-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.notif-column {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid transparent;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-column--cliente {
+  background: linear-gradient(180deg, rgba(0, 188, 140, 0.14) 0%, rgba(17, 19, 39, 0.9) 28%);
+  border-color: rgba(0, 200, 150, 0.35);
+  box-shadow: inset 0 1px 0 rgba(0, 255, 190, 0.12);
+}
+
+.notif-column--assessor {
+  background: linear-gradient(180deg, rgba(195, 164, 87, 0.2) 0%, rgba(17, 19, 39, 0.9) 28%);
+  border-color: rgba(195, 164, 87, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 215, 120, 0.12);
+}
+
+.notif-column--terceiro {
+  background: linear-gradient(180deg, rgba(156, 106, 255, 0.16) 0%, rgba(17, 19, 39, 0.9) 28%);
+  border-color: rgba(170, 130, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(200, 170, 255, 0.12);
+}
+
+.notif-column-header {
+  padding: 1rem 1.1rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.notif-column-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.notif-column--cliente .notif-column-title { color: #5dffc8; }
+.notif-column--assessor .notif-column-title { color: #f0d48a; }
+.notif-column--terceiro .notif-column-title { color: #c9b0ff; }
+
+.notif-column-badge {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.notif-column--cliente .notif-column-badge {
+  background: rgba(0, 200, 150, 0.22);
+  color: #7dffd4;
+}
+
+.notif-column--assessor .notif-column-badge {
+  background: rgba(195, 164, 87, 0.28);
+  color: #ffe6a8;
+}
+
+.notif-column--terceiro .notif-column-badge {
+  background: rgba(156, 106, 255, 0.25);
+  color: #dcc8ff;
+}
+
+.notif-column-body {
+  padding: 0 0.85rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.notif-column-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.82rem;
+  padding: 1.5rem 0.75rem;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  margin: 0 0.25rem;
+}
+
+/* ── 6. Cards de notificação ── */
+.notif-card {
+  background: rgba(10, 12, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 0.85rem 0.9rem;
+  transition: var(--transition-smooth);
+}
+
+.notif-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.notif-card.inactive {
+  opacity: 0.55;
+}
+
+.notif-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.notif-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #fff;
+}
+
+.notif-card-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.notif-timing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.notif-column--cliente .notif-timing {
+  background: rgba(0, 200, 150, 0.15);
+  color: #8bffe0;
+}
+
+.notif-column--assessor .notif-timing {
+  background: rgba(195, 164, 87, 0.18);
+  color: #f5dea0;
+}
+
+.notif-column--terceiro .notif-timing {
+  background: rgba(156, 106, 255, 0.18);
+  color: #d4bcff;
+}
+
+.notif-card-message {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: pre-wrap;
+  max-height: 4.5rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.notif-card-footer {
+  margin-top: 0.55rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.notif-status-dot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  margin-right: 0.3rem;
+}
+
+.notif-status-dot.active { background: #4ade80; }
+.notif-status-dot.inactive { background: #6b7280; }
+
+/* ── 7. Empty state global ── */
+.notif-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px dashed rgba(195, 164, 87, 0.35);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.notif-empty-state h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.notif-empty-state p {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+
+/* ── 8. Drawer lateral (formulário) ── */
+.notif-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  animation: notifFadeIn 0.2s ease;
+}
+
+.notif-drawer {
+  width: min(720px, 100vw);
+  height: 100%;
+  background: linear-gradient(180deg, #141833 0%, #0d0f1f 100%);
+  border-left: 1px solid rgba(195, 164, 87, 0.3);
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  animation: notifSlideIn 0.28s ease;
+}
+
+.notif-drawer-header {
+  padding: 1.35rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.notif-drawer-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.notif-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.35rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.notif-drawer-footer {
+  padding: 1rem 1.5rem 1.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+/* ── 9. Campos do formulário alinhados ── */
+.notif-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.notif-field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.02em;
+}
+
+.notif-field-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.notif-input,
+.notif-select,
+.notif-textarea {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid #2e3138;
+  background: #14161b;
+  color: #fff;
+  padding: 0.78rem 1.1rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  transition: var(--transition-smooth);
+}
+
+.notif-textarea {
+  border-radius: 1.1rem;
+  resize: vertical;
+  min-height: 140px;
+  line-height: 1.5;
+}
+
+.notif-input:focus,
+.notif-select:focus,
+.notif-textarea:focus {
+  outline: none;
+  border-color: #c3a457;
+  box-shadow: 0 0 0 3px rgba(195, 164, 87, 0.18);
+}
+
+.notif-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+/* ── 10. Seletor de destinatário colorido ── */
+.notif-recipient-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.55rem;
+}
+
+.notif-recipient-option {
+  border-radius: 1rem;
+  border: 2px solid transparent;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  background: rgba(255, 255, 255, 0.04);
+  font-family: inherit;
+  color: inherit;
+}
+
+.notif-recipient-option.cliente {
+  color: #7dffd4;
+  border-color: rgba(0, 200, 150, 0.25);
+}
+
+.notif-recipient-option.assessor {
+  color: #f5dea0;
+  border-color: rgba(195, 164, 87, 0.3);
+}
+
+.notif-recipient-option.terceiro {
+  color: #d4bcff;
+  border-color: rgba(156, 106, 255, 0.3);
+}
+
+.notif-recipient-option.cliente.selected {
+  background: rgba(0, 200, 150, 0.2);
+  border-color: #00c896;
+  box-shadow: 0 0 0 1px rgba(0, 200, 150, 0.35);
+}
+
+.notif-recipient-option.assessor.selected {
+  background: rgba(195, 164, 87, 0.22);
+  border-color: #c3a457;
+  box-shadow: 0 0 0 1px rgba(195, 164, 87, 0.4);
+}
+
+.notif-recipient-option.terceiro.selected {
+  background: rgba(156, 106, 255, 0.22);
+  border-color: #9c6aff;
+  box-shadow: 0 0 0 1px rgba(156, 106, 255, 0.4);
+}
+
+.notif-recipient-option strong {
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 0.15rem;
+}
+
+.notif-recipient-option small {
+  font-size: 0.68rem;
+  opacity: 0.85;
+}
+
+/* ── 11. Bloco de timing ── */
+.notif-timing-block {
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.notif-timing-block-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e8d5a3;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.notif-offset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+.notif-offset-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+}
+
+.notif-offset-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0.35rem 0;
+}
+
+.notif-offset-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.notif-offset-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+/* ── 12. Toggle ativo ── */
+.notif-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.notif-toggle-row input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #c3a457;
+}
+
+/* ── 13. Chips de variáveis ── */
+.notif-vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.notif-var-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  background: rgba(195, 164, 87, 0.12);
+  border: 1px solid rgba(195, 164, 87, 0.28);
+  color: #e8d5a3;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition-smooth);
+}
+
+.notif-var-chip:hover {
+  background: rgba(195, 164, 87, 0.22);
+  border-color: rgba(195, 164, 87, 0.45);
+}
+
+.notif-var-chip code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  color: #fff;
+  background: none;
+}
+
+.notif-var-chip span {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.68rem;
+}
+
+/* ── 14. Animações ── */
+@keyframes notifFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes notifSlideIn {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ── 15. Responsivo ── */
+@media (max-width: 960px) {
+  .notif-table thead {
+    display: none;
+  }
+
+  .notif-table,
+  .notif-table tbody,
+  .notif-table tr,
+  .notif-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .notif-table tr {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .notif-table td {
+    padding: 0.35rem 1rem;
+  }
+
+  .notif-table-cell-actions {
+    text-align: left;
+    padding-bottom: 0.75rem;
+  }
+
+  .notif-field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .notif-recipient-picker {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .notif-admin-page {
+    padding: 1.25rem;
+  }
+
+  .notif-offset-grid {
+    grid-template-columns: 1fr;
+  }
+}

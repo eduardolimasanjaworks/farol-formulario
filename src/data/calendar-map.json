@@ -1,0 +1,489 @@
+{
+  "generatedAt": "2026-05-27T16:02:32.965Z",
+  "apiBase": "https://xltw-api6-8lww.b2.xano.io/api:5ONttZdQ",
+  "techfala": {
+    "calendarId": null,
+    "calendarTitle": null
+  },
+  "assessores": {
+    "Naiara": {
+      "calendarId": 1658,
+      "calendarTitle": "Naiara - RH / Vida",
+      "email": "expansao@farolcapital.c...",
+      "matchScore": 100,
+      "aliases": [
+        "Naiara"
+      ],
+      "source": "auto"
+    },
+    "Clauber Marcelo Gomes": {
+      "calendarId": 1641,
+      "calendarTitle": "Clauber Gomes - CEO",
+      "email": "clauber@farolcapital.com.br",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Douglas Souza Rocha": {
+      "calendarId": 1650,
+      "calendarTitle": "Douglas Rocha - Crédito",
+      "email": "douglas@farolcapital.com.br",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Gustavo Gomes Benaglia": {
+      "calendarId": 1652,
+      "calendarTitle": "Gustavo Benaglia - Head Planejamento",
+      "email": "GUSTAVO.BENAGLIA@FAROLCAPITAL.COM.BR",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Henrique Bíscaro de Castro": {
+      "calendarId": 1644,
+      "calendarTitle": "Henrique Biscaro - Assessor",
+      "email": "henrique.castro@farolc...",
+      "matchScore": 95,
+      "aliases": [
+        "Henrique"
+      ],
+      "source": "auto"
+    },
+    "JULIANO BENEDITO PIRES DE BORBA": {
+      "calendarId": 1642,
+      "calendarTitle": "Juliano Borba - CEO",
+      "email": "juliano@farolcapital.com.br",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Leandro Borges Pinto": {
+      "calendarId": 1645,
+      "calendarTitle": "Leandro Borges - Assessor",
+      "email": "leandro.borges@farolcapital.com.br",
+      "matchScore": 100,
+      "aliases": [],
+      "source": "override"
+    },
+    "Lucas Soares Reis": {
+      "calendarId": 1646,
+      "calendarTitle": "Lucas Reis - Assessor",
+      "email": "lucas.reis@farolcapital.com...",
+      "matchScore": 95,
+      "aliases": [
+        "Lucas"
+      ],
+      "source": "auto"
+    },
+    "Paulo Henrique Rodrigues Silva Bif": {
+      "calendarId": 1660,
+      "calendarTitle": "Paulo Bif - Previdencia",
+      "email": "paulobif@farolcapital.com.br",
+      "matchScore": 100,
+      "aliases": [],
+      "source": "override"
+    },
+    "Rafael Rodrigues de Melo": {
+      "calendarId": 1659,
+      "calendarTitle": "Rafael Melo - Vida",
+      "email": "rafael@farolcapital.com.b...",
+      "matchScore": 95,
+      "aliases": [
+        "Rafael"
+      ],
+      "source": "auto"
+    },
+    "Renato Mesquita Aquino Matos": {
+      "calendarId": 1648,
+      "calendarTitle": "Renato Matos - Assessor",
+      "email": "renato.matos@farolcapit...",
+      "matchScore": 100,
+      "aliases": [
+        "Renato"
+      ],
+      "source": "override"
+    },
+    "Victor Cintra Castiglioni": {
+      "calendarId": 1656,
+      "calendarTitle": "Victor Castiglioni - Mesa RV",
+      "email": "victor.castiglioni@farolcapital.com.br",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Victor de Barros Saeger Marinho": {
+      "calendarId": 1657,
+      "calendarTitle": "Victor Marinho - Mesa RV / Câmbio",
+      "email": "victor.marinho@farolcapital.com.br",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Vinicius José Teixeira Mouta": {
+      "calendarId": 1649,
+      "calendarTitle": "Vinicius Mouta - Assessor",
+      "email": "vinicius.mouta@farolcapital.com.br",
+      "matchScore": 95,
+      "aliases": [],
+      "source": "auto"
+    },
+    "Karine": {
+      "calendarId": 1653,
+      "calendarTitle": "Karine Oliveira - Planejamento",
+      "email": "karine.oliveira@grupofaro...",
+      "matchScore": 90,
+      "aliases": [
+        "Karine"
+      ],
+      "source": "auto"
+    },
+    "Bruno de Oliveira Fernandes": {
+      "calendarId": 1662,
+      "calendarTitle": "Bruno Gomes - Seguros",
+      "email": "bruno.fernandes@farolcapital.com.br",
+      "matchScore": 100,
+      "aliases": [],
+      "source": "override"
+    },
+    "Guilherme Cichello Nunes": {
+      "calendarId": 1643,
+      "calendarTitle": "Guilherme Cichelo - Assessor",
+      "email": "guilherme@farolcapit...",
+      "matchScore": 100,
+      "aliases": [
+        "Guilherme Cichello"
+      ],
+      "source": "override"
+    },
+    "Leandro Santos Carneiro": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "leandro.carneiro@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "override-none"
+    },
+    "Thiago Cardoso dos Santos": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "thiago.cardoso@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "override-none"
+    },
+    "Rafael": {
+      "calendarId": 1664,
+      "calendarTitle": "Rafael Moreira - Consórcio",
+      "email": "rafael@pessoascorretora...",
+      "matchScore": 85,
+      "aliases": [
+        "Rafael"
+      ],
+      "source": "auto"
+    },
+    "Pedro": {
+      "calendarId": 1654,
+      "calendarTitle": "Pedro Henrique - Planejamento",
+      "email": "pedro.alves@grupofarolca...",
+      "matchScore": 85,
+      "aliases": [
+        "Pedro"
+      ],
+      "source": "auto"
+    },
+    "Nathalia": {
+      "calendarId": 1661,
+      "calendarTitle": "Nathalia Gomes - Head Seguros",
+      "email": "contato@pessoascorret...",
+      "matchScore": 85,
+      "aliases": [
+        "Nathalia"
+      ],
+      "source": "auto"
+    },
+    "FABIO ROGERIO MOREIRA": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "override-none"
+    },
+    "Flavio Dos Santos Garcia": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "flavio@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Guilherme Soares Cordeoli": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "guilherme.soares@far...",
+      "matchScore": 0,
+      "aliases": [
+        "Guilherme Soares"
+      ],
+      "source": "override-none"
+    },
+    "Hercilio Luiz Soares Neto": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "hercilio@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Herick da Silva Moraes": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "herick.moraes@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Ivo Carelli Neto": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "ivo.carelli@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "JAQUELINE SILVEIRA SILVA": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "jaqueline.silveira@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Marco Aurelio Zanette": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "marco.zanette@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Neuma Luci De Moraes Pereira": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "neuma@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Paulo Eduardo Marques Lara": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "paulo.lara@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "override-none"
+    },
+    "Renato Nobuo Maeda": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "Renato@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "override-none"
+    },
+    "Rubem Daniel Duek": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "rubem.daniel@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Tadeu de Carvalho Rezende": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "tadeu@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "unmatched"
+    },
+    "Victor Tarouquella da Silva do Espirito Santo": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "victor.tarouquella@farolcapital.com.br",
+      "matchScore": 0,
+      "aliases": [],
+      "source": "override-none"
+    },
+    "Hendrigo": {
+      "calendarId": null,
+      "calendarTitle": null,
+      "email": "hendrigo.santos@farol...",
+      "matchScore": 0,
+      "aliases": [
+        "Hendrigo"
+      ],
+      "source": "unmatched"
+    }
+  },
+  "calendars": [
+    {
+      "id": 1530,
+      "title": "Leandro Borges",
+      "interval": 60
+    },
+    {
+      "id": 1643,
+      "title": "Guilherme Cichelo - Assessor",
+      "interval": 60
+    },
+    {
+      "id": 1646,
+      "title": "Lucas Reis - Assessor",
+      "interval": 60
+    },
+    {
+      "id": 1647,
+      "title": "Renata Guaranten - Assessor",
+      "interval": 60
+    },
+    {
+      "id": 1644,
+      "title": "Henrique Biscaro - Assessor",
+      "interval": 60
+    },
+    {
+      "id": 1653,
+      "title": "Karine Oliveira - Planejamento",
+      "interval": 60
+    },
+    {
+      "id": 1648,
+      "title": "Renato Matos - Assessor",
+      "interval": 60
+    },
+    {
+      "id": 1649,
+      "title": "Vinicius Mouta - Assessor",
+      "interval": 15
+    },
+    {
+      "id": 1650,
+      "title": "Douglas Rocha - Crédito",
+      "interval": 60
+    },
+    {
+      "id": 1652,
+      "title": "Gustavo Benaglia - Head Planejamento",
+      "interval": 60
+    },
+    {
+      "id": 1654,
+      "title": "Pedro Henrique - Planejamento",
+      "interval": 15
+    },
+    {
+      "id": 1656,
+      "title": "Victor Castiglioni - Mesa RV",
+      "interval": 60
+    },
+    {
+      "id": 1655,
+      "title": "Luan Morais - Mesa RV",
+      "interval": 60
+    },
+    {
+      "id": 1657,
+      "title": "Victor Marinho - Mesa RV / Câmbio",
+      "interval": 60
+    },
+    {
+      "id": 1658,
+      "title": "Naiara - RH / Vida",
+      "interval": 60
+    },
+    {
+      "id": 1659,
+      "title": "Rafael Melo - Vida",
+      "interval": 60
+    },
+    {
+      "id": 1662,
+      "title": "Bruno Gomes - Seguros",
+      "interval": 60
+    },
+    {
+      "id": 1642,
+      "title": "Juliano Borba - CEO",
+      "interval": 60
+    },
+    {
+      "id": 1641,
+      "title": "Clauber Gomes - CEO",
+      "interval": 60
+    },
+    {
+      "id": 1663,
+      "title": "Thiago Barbosa - Seguros",
+      "interval": 60
+    },
+    {
+      "id": 1645,
+      "title": "Leandro Borges - Assessor",
+      "interval": 60
+    },
+    {
+      "id": 1660,
+      "title": "Paulo Bif - Previdencia",
+      "interval": 60
+    },
+    {
+      "id": 1664,
+      "title": "Rafael Moreira - Consórcio",
+      "interval": 60
+    },
+    {
+      "id": 1661,
+      "title": "Nathalia Gomes - Head Seguros",
+      "interval": 60
+    }
+  ],
+  "unmatchedAssessores": [
+    "Leandro Santos Carneiro",
+    "Thiago Cardoso dos Santos",
+    "FABIO ROGERIO MOREIRA",
+    "Flavio Dos Santos Garcia",
+    "Guilherme Soares Cordeoli",
+    "Hercilio Luiz Soares Neto",
+    "Herick da Silva Moraes",
+    "Ivo Carelli Neto",
+    "JAQUELINE SILVEIRA SILVA",
+    "Marco Aurelio Zanette",
+    "Neuma Luci De Moraes Pereira",
+    "Paulo Eduardo Marques Lara",
+    "Renato Nobuo Maeda",
+    "Rubem Daniel Duek",
+    "Tadeu de Carvalho Rezende",
+    "Victor Tarouquella da Silva do Espirito Santo",
+    "Hendrigo"
+  ],
+  "unmatchedCalendars": [
+    {
+      "id": 1530,
+      "title": ""
+    },
+    {
+      "id": 1647,
+      "title": ""
+    },
+    {
+      "id": 1655,
+      "title": ""
+    },
+    {
+      "id": 1663,
+      "title": ""
+    }
+  ]
+}

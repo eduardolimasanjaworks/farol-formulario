@@ -1,0 +1,12 @@
+URL: https: //xltw-api6-8lww.b2.xano.io/api:5ONttZdQ
+
+MÉTODO/VERBO: POST //FIXO
+
+BODY
+{
+    "textContent": "Mensagem de teste: \n Assessor responsável: [VARIAVEL_ASSESSOR], Cliente: [NOME_CLIENTE], Telefone: [VARIAVEL_TELEFONE], E-mail: [VARIAVEL_EMAIL]",
+    "sendNow": true, //FIXO
+    "type": "texto", //FIXO
+    "sendDate": 0, //FIXO
+    "phoneNumber": "{VARIAVEL_TELEFONE}"
+}
