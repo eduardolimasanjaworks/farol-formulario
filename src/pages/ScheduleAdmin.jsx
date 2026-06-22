@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CalendarDays,
@@ -34,6 +34,10 @@ const ScheduleAdmin = () => {
   const navigate = useNavigate();
   const { token } = getAuthSession();
   const [statusFilter, setStatusFilter] = useState('scheduled');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [assessorFilter, setAssessorFilter] = useState('all');
+  const [creatorFilter, setCreatorFilter] = useState('all');
+  const [meetingDateFilter, setMeetingDateFilter] = useState('');
   const [meetings, setMeetings] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +55,42 @@ const ScheduleAdmin = () => {
     });
     return map;
   }, [notifications]);
+
+  const assessorOptions = useMemo(
+    () => ['all', ...new Set(meetings.map((item) => item.assessor).filter(Boolean))],
+    [meetings]
+  );
+
+  const creatorOptions = useMemo(
+    () => ['all', ...new Set(meetings.map((item) => item.createdBy).filter(Boolean))],
+    [meetings]
+  );
+
+  const filteredMeetings = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return meetings.filter((meeting) => {
+      if (assessorFilter !== 'all' && meeting.assessor !== assessorFilter) return false;
+      if (creatorFilter !== 'all' && (meeting.createdBy || '') !== creatorFilter) return false;
+      if (meetingDateFilter && meeting.meetingDate !== meetingDateFilter) return false;
+
+      if (!query) return true;
+
+      const haystack = [
+        meeting.cliente,
+        meeting.assessor,
+        meeting.createdBy,
+        meeting.meetingDate,
+        meeting.meetingTime,
+        meeting.source,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [meetings, searchTerm, assessorFilter, creatorFilter, meetingDateFilter]);
 
   const loadBoard = async () => {
     setLoading(true);
@@ -181,12 +221,78 @@ const ScheduleAdmin = () => {
           </button>
         </div>
 
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+          }}
+        >
+          <label style={{ display: 'grid', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Buscar</span>
+            <input
+              className="modern-select"
+              type="text"
+              placeholder="Cliente, assessor, SDR..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Assessor</span>
+            <select
+              className="modern-select"
+              value={assessorFilter}
+              onChange={(event) => setAssessorFilter(event.target.value)}
+            >
+              <option value="all">Todos</option>
+              {assessorOptions
+                .filter((item) => item !== 'all')
+                .map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+            </select>
+          </label>
+
+          <label style={{ display: 'grid', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>SDR</span>
+            <select
+              className="modern-select"
+              value={creatorFilter}
+              onChange={(event) => setCreatorFilter(event.target.value)}
+            >
+              <option value="all">Todos</option>
+              {creatorOptions
+                .filter((item) => item !== 'all')
+                .map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+            </select>
+          </label>
+
+          <label style={{ display: 'grid', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Data</span>
+            <input
+              className="modern-select"
+              type="date"
+              value={meetingDateFilter}
+              onChange={(event) => setMeetingDateFilter(event.target.value)}
+            />
+          </label>
+        </div>
+
         {loading ? (
           <p style={{ color: 'var(--text-muted)' }}>Carregando agendamentos...</p>
-        ) : meetings.length === 0 ? (
+        ) : filteredMeetings.length === 0 ? (
           <div className="notif-empty-state">
             <h3>Nenhum agendamento encontrado.</h3>
-            <p>Altere o filtro ou crie um novo agendamento na página do SDR.</p>
+            <p>Ajuste os filtros ou crie um novo agendamento na página do SDR.</p>
           </div>
         ) : (
           <div className="notif-table-wrap">
@@ -203,7 +309,7 @@ const ScheduleAdmin = () => {
                 </tr>
               </thead>
               <tbody>
-                {meetings.map((meeting) => {
+                {filteredMeetings.map((meeting) => {
                   const related = notificationsByMeeting.get(meeting.id) || [];
                   const pendingCount = related.filter((item) => item.status === 'pending').length;
 

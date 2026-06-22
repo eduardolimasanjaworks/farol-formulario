@@ -16,6 +16,35 @@ const calendarRequest = async (path, options = {}) => {
   return data;
 };
 
+const toPositiveInt = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? Math.trunc(num) : null;
+};
+
+const extractEventId = (payload) => {
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const found = extractEventId(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  if (!payload || typeof payload !== 'object') return null;
+
+  for (const key of ['id', 'event_id', 'eventId']) {
+    const value = toPositiveInt(payload[key]);
+    if (value) return value;
+  }
+
+  for (const value of Object.values(payload)) {
+    const found = extractEventId(value);
+    if (found) return found;
+  }
+
+  return null;
+};
+
 export const getCalendarMap = () => calendarMap;
 
 export const resolveAssessorCalendarId = (assessorName = '') => {
@@ -86,6 +115,21 @@ export const createCalendarEvent = (payload) =>
     body: JSON.stringify(payload),
   });
 
+export const deleteCalendarEvents = (externalEvents = []) => {
+  const eventIds = [...new Set(
+    externalEvents
+      .map((item) => toPositiveInt(item?.eventId))
+      .filter(Boolean)
+  )];
+
+  if (!eventIds.length) return Promise.resolve([]);
+
+  return calendarRequest('/events', {
+    method: 'DELETE',
+    body: JSON.stringify({ events_id: eventIds }),
+  });
+};
+
 export const fetchAvailableSlots = ({ calendarId, daysToShow = 7, slotSize = 30 }) =>
   calendarRequest(`/available-slots?calendarId=${calendarId}&daysToShow=${daysToShow}&slotSize=${slotSize}`);
 
@@ -103,7 +147,7 @@ export const scheduleMeeting = async ({
   clienteName,
   clientePhone,
   clienteEmail,
-  assessorPhone,
+  assessorPhone: _assessorPhone,
   assessorEmail,
   isoDate,
   horario,
@@ -146,8 +190,35 @@ export const scheduleMeeting = async ({
     notificationEnabled: false,
   });
 
+  const buildExternalEvent = (response, fallback) => ({
+    provider: 'softwareai',
+    label: fallback.label,
+    calendarId: fallback.calendarId,
+    eventId: extractEventId(response),
+    title: fallback.title,
+    description: fallback.description,
+    guests: fallback.guests,
+    durationMinutes: fallback.durationMinutes,
+    notificationEnabled: fallback.notificationEnabled,
+    meetingUrl: '',
+    privateFileUrl: [],
+    color: '',
+  });
+
+  const assessorResponse = await createCalendarEvent(assessorPayload);
   const created = {
-    softwareAi: [await createCalendarEvent(assessorPayload)],
+    softwareAi: [assessorResponse],
+    externalEvents: [
+      buildExternalEvent(assessorResponse, {
+        label: assessorName,
+        calendarId: assessorCalendarId,
+        title,
+        description,
+        guests,
+        durationMinutes,
+        notificationEnabled: false,
+      }),
+    ],
     outlook: null,
   };
 
@@ -195,8 +266,92 @@ export const scheduleMeeting = async ({
       durationMinutes,
       notificationEnabled: false,
     });
-    created.softwareAi.push(await createCalendarEvent(techfalaPayload));
+    const techfalaResponse = await createCalendarEvent(techfalaPayload);
+    created.softwareAi.push(techfalaResponse);
+    created.externalEvents.push(
+      buildExternalEvent(techfalaResponse, {
+        label: 'Techfala',
+        calendarId: techfalaCalendarId,
+        title: `[Techfala] ${title}`,
+        description,
+        guests,
+        durationMinutes,
+        notificationEnabled: false,
+      })
+    );
   }
 
   return created;
+};
+
+export const buildMeetingCalendarPlan = ({
+  assessorName,
+  clienteName,
+  clientePhone,
+  clienteEmail,
+  assessorEmail,
+  isoDate,
+  horario,
+  origem = 'Farol SDR',
+  durationMinutes = 30,
+}) => {
+  const assessorCalendarId = resolveAssessorCalendarId(assessorName);
+  if (!assessorCalendarId) {
+    throw new Error(
+      `Assessor "${assessorName}" sem calendário mapeado. Rode: npm run calendars:sync`
+    );
+  }
+
+  const guests = [];
+  const pushGuestEmail = (value) => {
+    const guest = normalizeGuest(value);
+    if (guest && guest.includes('@') && !guests.includes(guest)) guests.push(guest);
+  };
+
+  pushGuestEmail(clienteEmail);
+  pushGuestEmail(assessorEmail);
+
+  const title = `Reunião SDR — ${clienteName}`;
+  const description = [
+    `Cliente: ${clienteName}`,
+    `Assessor: ${assessorName}`,
+    `Origem: ${origem}`,
+    clientePhone ? `WhatsApp cliente: ${clientePhone}` : '',
+  ].filter(Boolean).join('\n');
+
+  const plan = [
+    {
+      provider: 'softwareai',
+      label: assessorName,
+      calendarId: assessorCalendarId,
+      title,
+      description,
+      guests,
+      durationMinutes,
+      notificationEnabled: false,
+    },
+  ];
+
+  const techfalaCalendarId = getTechfalaCalendarId();
+  if (techfalaCalendarId && techfalaCalendarId !== assessorCalendarId) {
+    plan.push({
+      provider: 'softwareai',
+      label: 'Techfala',
+      calendarId: techfalaCalendarId,
+      title: `[Techfala] ${title}`,
+      description,
+      guests,
+      durationMinutes,
+      notificationEnabled: false,
+    });
+  }
+
+  return {
+    calendarPlan: plan,
+    title,
+    description,
+    guests,
+    isoDate,
+    horario,
+  };
 };

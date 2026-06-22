@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, Save, MessageSquare, Calendar, Users, UserPlus, Phone, Sparkles, Plus, Pencil, Trash2, Bell, Clock, XCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Send, Save, MessageSquare, Calendar, CalendarClock, Users, UserPlus, Phone, Sparkles, Plus, Pencil, Trash2, Bell, Clock, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { config } from '../config';
-import { resolveAssessorCalendarId, scheduleMeeting } from '../services/calendarApi';
+import { buildMeetingCalendarPlan, resolveAssessorCalendarId } from '../services/calendarApi';
 import { sendWhatsAppMessage } from '../services/messageApi';
 import {
   cancelScheduledMeeting,
   createScheduledMeeting,
   fetchScheduledMeetings,
   fetchScheduledNotifications,
+  rescheduleScheduledMeeting,
 } from '../services/scheduleApi';
 import { fetchMessageTemplates, saveMessageTemplates } from '../services/messageTemplatesApi';
 import {
@@ -164,14 +165,17 @@ const SDR = () => {
   const [scheduledNotifications, setScheduledNotifications] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
   const [cancellingMeetingId, setCancellingMeetingId] = useState(null);
+  const [reschedulingMeetingId, setReschedulingMeetingId] = useState(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [rescheduleForm, setRescheduleForm] = useState({ meetingDate: '', meetingTime: '' });
   const authToken = authSession.token;
 
   const loadScheduleBoard = async () => {
     setScheduleLoading(true);
     try {
       const [meetingsPayload, notificationsPayload] = await Promise.all([
-        fetchScheduledMeetings({ limit: 50 }),
-        fetchScheduledNotifications({ limit: 100 }),
+        fetchScheduledMeetings({ limit: 200 }),
+        fetchScheduledNotifications({ limit: 200 }),
       ]);
       setScheduledMeetings(meetingsPayload.rows || []);
       setScheduledNotifications(notificationsPayload.rows || []);
@@ -208,6 +212,35 @@ const SDR = () => {
       window.alert(error.message || 'Não foi possível cancelar a reunião.');
     } finally {
       setCancellingMeetingId(null);
+    }
+  };
+
+  const openRescheduleMeeting = (item) => {
+    setRescheduleTarget(item);
+    setRescheduleForm({
+      meetingDate: item.meetingDate,
+      meetingTime: item.meetingTime,
+    });
+  };
+
+  const closeRescheduleMeeting = () => {
+    setRescheduleTarget(null);
+    setRescheduleForm({ meetingDate: '', meetingTime: '' });
+  };
+
+  const handleRescheduleMeeting = async (event) => {
+    event.preventDefault();
+    if (!rescheduleTarget) return;
+
+    setReschedulingMeetingId(rescheduleTarget.id);
+    try {
+      await rescheduleScheduledMeeting(rescheduleTarget.id, rescheduleForm);
+      await loadScheduleBoard();
+      closeRescheduleMeeting();
+    } catch (error) {
+      window.alert(error.message || 'Não foi possível remarcar a reunião.');
+    } finally {
+      setReschedulingMeetingId(null);
     }
   };
 
@@ -473,22 +506,23 @@ const SDR = () => {
         return;
       }
 
+      let calendarPlan = [];
       if (config.calendarEnabled) {
         const assessorEmail = assessorSelecionado ? getAssessorEmailFromItem(assessorSelecionado) : '';
         const calendarId = resolveAssessorCalendarId(formData.assessor);
 
         if (calendarId) {
-          await scheduleMeeting({
+          const plan = buildMeetingCalendarPlan({
             assessorName: formData.assessor,
             clienteName: clienteNome,
             clientePhone: phoneCliente,
             clienteEmail: '',
-            assessorPhone: phoneAssessor,
             assessorEmail,
             isoDate: formData.data,
             horario: formData.horario,
             origem: formData.origem,
           });
+          calendarPlan = plan.calendarPlan || [];
         }
       }
 
@@ -508,10 +542,7 @@ const SDR = () => {
         throw new Error('Copys de mensagem não carregadas. Recarregue a página.');
       }
 
-      await sendWhatsAppMessage(mensagemCliente, phoneCliente);
-      await sendWhatsAppMessage(mensagemAssessor, phoneAssessor);
-
-      await createScheduledMeeting({
+      const createdPayload = await createScheduledMeeting({
         assessor: formData.assessor,
         cliente: clienteNome,
         meetingDate: formData.data,
@@ -519,12 +550,21 @@ const SDR = () => {
         phoneCliente,
         phoneAssessor,
         source: formData.origem || 'Farol SDR',
+        calendarPlan,
       });
       await loadScheduleBoard();
 
+      let deliveryWarning = '';
+      try {
+        await sendWhatsAppMessage(mensagemCliente, phoneCliente);
+        await sendWhatsAppMessage(mensagemAssessor, phoneAssessor);
+      } catch (error) {
+        deliveryWarning = error?.message || 'Falha ao enviar as mensagens iniciais.';
+      }
+
       await sendActionLog({
           actionType: 'sdr_submit',
-          actionStatus: 'success',
+          actionStatus: deliveryWarning ? 'partial' : 'success',
           assessor: formData.assessor,
           cliente: clienteNome,
           scheduleDate: formData.data,
@@ -533,9 +573,18 @@ const SDR = () => {
           phoneCliente,
           phoneAssessor,
           detail: {
-            calendarEnabled: Boolean(config.calendarEnabled),
+            calendarEnabled: Boolean(config.calendarEnabled && calendarPlan.length),
+            meetingId: createdPayload?.meeting?.id || null,
+            deliveryWarning: deliveryWarning || null,
           },
         });
+
+      if (deliveryWarning) {
+        setStatus('error');
+        setFormError(`Reunião salva com sucesso, mas houve falha no envio das mensagens: ${deliveryWarning}`);
+        setTimeout(() => setStatus('idle'), 5000);
+        return;
+      }
 
         setStatus('success');
         localStorage.removeItem('sdr_form_data_v2');
@@ -656,30 +705,56 @@ const SDR = () => {
                     <div key={item.id} style={{ padding: '0.65rem', borderRadius: '0.65rem', background: 'rgba(255,255,255,0.03)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', alignItems: 'flex-start' }}>
                         <strong>{item.cliente}</strong>
-                        {item.canCancel && (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelMeeting(item)}
-                            disabled={cancellingMeetingId === item.id}
-                            title="Cancelar reunião e parar follow-ups"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              padding: '0.2rem 0.45rem',
-                              fontSize: '0.72rem',
-                              borderRadius: '0.4rem',
-                              border: '1px solid rgba(239, 68, 68, 0.35)',
-                              background: 'rgba(239, 68, 68, 0.08)',
-                              color: '#fca5a5',
-                              cursor: cancellingMeetingId === item.id ? 'wait' : 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <XCircle size={12} />
-                            {cancellingMeetingId === item.id ? 'Cancelando...' : 'Cancelar'}
-                          </button>
-                        )}
+                        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          {item.canReschedule && (
+                            <button
+                              type="button"
+                              onClick={() => openRescheduleMeeting(item)}
+                              disabled={reschedulingMeetingId === item.id}
+                              title="Remarcar reunião"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                padding: '0.2rem 0.45rem',
+                                fontSize: '0.72rem',
+                                borderRadius: '0.4rem',
+                                border: '1px solid rgba(195, 164, 87, 0.35)',
+                                background: 'rgba(195, 164, 87, 0.08)',
+                                color: '#f6d28b',
+                                cursor: reschedulingMeetingId === item.id ? 'wait' : 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              <CalendarClock size={12} />
+                              Remarcar
+                            </button>
+                          )}
+                          {item.canCancel && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelMeeting(item)}
+                              disabled={cancellingMeetingId === item.id}
+                              title="Cancelar reunião e parar follow-ups"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                padding: '0.2rem 0.45rem',
+                                fontSize: '0.72rem',
+                                borderRadius: '0.4rem',
+                                border: '1px solid rgba(239, 68, 68, 0.35)',
+                                background: 'rgba(239, 68, 68, 0.08)',
+                                color: '#fca5a5',
+                                cursor: cancellingMeetingId === item.id ? 'wait' : 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              <XCircle size={12} />
+                              {cancellingMeetingId === item.id ? 'Cancelando...' : 'Cancelar'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         Assessor: {item.assessor}
@@ -1024,6 +1099,91 @@ const SDR = () => {
                 <div className="modal-empty">Nenhum resultado encontrado.</div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {rescheduleTarget && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sdr-reschedule-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            zIndex: 1100,
+          }}
+          onClick={closeRescheduleMeeting}
+        >
+          <div
+            className="glass-card"
+            style={{ width: 'min(480px, 96vw)', padding: '1.5rem' }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="sdr-reschedule-title" style={{ margin: '0 0 0.5rem', fontSize: '1.15rem' }}>
+              Remarcar reunião
+            </h2>
+            <p style={{ margin: '0 0 1rem', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+              {rescheduleTarget.cliente} com {rescheduleTarget.assessor}
+            </p>
+
+            <form onSubmit={handleRescheduleMeeting} style={{ display: 'grid', gap: '0.75rem' }}>
+              <label style={{ display: 'grid', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Nova data</span>
+                <input
+                  className="modern-select"
+                  type="date"
+                  value={rescheduleForm.meetingDate}
+                  onChange={(event) =>
+                    setRescheduleForm((prev) => ({ ...prev, meetingDate: event.target.value }))
+                  }
+                  required
+                />
+              </label>
+
+              <label style={{ display: 'grid', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Novo horário</span>
+                <select
+                  className="modern-select"
+                  value={rescheduleForm.meetingTime}
+                  onChange={(event) =>
+                    setRescheduleForm((prev) => ({ ...prev, meetingTime: event.target.value }))
+                  }
+                  required
+                >
+                  <option value="">Selecione</option>
+                  {timeOptions.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', gap: '0.35rem' }}>
+                <Clock size={13} />
+                O evento no calendário e os follow-ups pendentes serão atualizados.
+              </p>
+
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button type="button" className="btn-secondary" style={{ width: 'auto' }} onClick={closeRescheduleMeeting}>
+                  Voltar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ width: 'auto' }}
+                  disabled={reschedulingMeetingId === rescheduleTarget.id}
+                >
+                  {reschedulingMeetingId === rescheduleTarget.id ? 'Salvando...' : 'Salvar nova data'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -19,6 +19,7 @@ import {
   initScheduledMeetingStore,
   createScheduledMeetingWithNotifications,
   getScheduledMeetingById,
+  listScheduledMeetings,
   processPendingNotifications,
   listScheduledNotifications,
 } from '../server/scheduled-meetings-db.mjs';
@@ -260,6 +261,85 @@ async function testDbCancel(meetingId) {
   else fail('idempotência do cancelamento', JSON.stringify(again));
 }
 
+async function testVisibilityByUser() {
+  console.log('\n[DB] Visibilidade por perfil');
+
+  if (!pool) {
+    fail('PostgreSQL não configurado — pule teste de visibilidade');
+    return;
+  }
+
+  const createdIds = [];
+  const suffix = Date.now();
+
+  try {
+    const createdA = await createScheduledMeetingWithNotifications({
+      assessor: 'Assessor Visibilidade A',
+      cliente: `Lead Visibilidade A ${suffix}`,
+      meetingDate: '2099-12-21',
+      meetingTime: '09:00',
+      phoneCliente: '5511999002211',
+      phoneAssessor: '5511988002211',
+      source: 'test-visibility',
+      createdBy: 'sdr-a',
+      createdByUserId: 101,
+    });
+    createdIds.push(createdA.meeting.id);
+
+    const createdB = await createScheduledMeetingWithNotifications({
+      assessor: 'Assessor Visibilidade B',
+      cliente: `Lead Visibilidade B ${suffix}`,
+      meetingDate: '2099-12-21',
+      meetingTime: '10:00',
+      phoneCliente: '5511999003311',
+      phoneAssessor: '5511988003311',
+      source: 'test-visibility',
+      createdBy: 'sdr-b',
+      createdByUserId: 202,
+    });
+    createdIds.push(createdB.meeting.id);
+
+    const rowsUserA = await listScheduledMeetings({
+      limit: 50,
+      status: null,
+      user: { role: 'user', login: 'sdr-a', sub: 101 },
+    });
+    const idsUserA = rowsUserA.map((item) => item.id);
+    if (idsUserA.includes(createdA.meeting.id) && !idsUserA.includes(createdB.meeting.id)) {
+      ok('SDR vê apenas as próprias reuniões');
+    } else {
+      fail('filtro de reuniões por SDR', JSON.stringify(idsUserA));
+    }
+
+    const notifUserA = await listScheduledNotifications({
+      limit: 100,
+      user: { role: 'user', login: 'sdr-a', sub: 101 },
+    });
+    const meetingIdsUserA = [...new Set(notifUserA.map((item) => item.meetingId))];
+    if (meetingIdsUserA.includes(createdA.meeting.id) && !meetingIdsUserA.includes(createdB.meeting.id)) {
+      ok('SDR vê apenas os próprios follow-ups');
+    } else {
+      fail('filtro de follow-ups por SDR', JSON.stringify(meetingIdsUserA));
+    }
+
+    const rowsAdmin = await listScheduledMeetings({
+      limit: 50,
+      status: null,
+      user: { role: 'admin', login: 'admin', sub: 1 },
+    });
+    const idsAdmin = rowsAdmin.map((item) => item.id);
+    if (idsAdmin.includes(createdA.meeting.id) && idsAdmin.includes(createdB.meeting.id)) {
+      ok('admin vê reuniões de todos os SDRs');
+    } else {
+      fail('filtro de reuniões para admin', JSON.stringify(idsAdmin));
+    }
+  } finally {
+    for (const id of createdIds) {
+      await cleanupTestMeeting(id);
+    }
+  }
+}
+
 async function testCronDryRun(meetingId) {
   console.log('\n[DB] Cron processPendingNotifications (dry-run)');
 
@@ -395,6 +475,7 @@ async function main() {
     meetingId = await testDbScheduling();
     await testCronDryRun(meetingId);
     await testDbCancel(meetingId);
+    await testVisibilityByUser();
     await testCronScript();
   } finally {
     await cleanupTestMeeting(meetingId);

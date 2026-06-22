@@ -13,13 +13,27 @@ import { buildMessageTemplateVars, renderMessageTemplate } from './message-rende
 import { sendEvolutionText } from './evolution-send.mjs';
 import { formatDateToBr, normalizeIsoDate } from './date-format.mjs';
 import { MEETING_STATUS, NOTIFICATION_STATUS } from './schedule-constants.mjs';
-import { canManageScheduledMeeting } from './schedule-auth.mjs';
+import { canManageScheduledMeeting, normalizeLogin } from './schedule-auth.mjs';
 
 const MEETINGS_TABLE = safeTableName(process.env.PG_SCHEDULED_MEETINGS_TABLE, 'scheduled_meetings');
 const NOTIFICATIONS_TABLE = safeTableName(
   process.env.PG_SCHEDULED_NOTIFICATIONS_TABLE,
   'scheduled_notifications'
 );
+
+const parseExternalEvents = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
 
 const mapMeetingRow = (row) => ({
   id: row.id,
@@ -33,6 +47,7 @@ const mapMeetingRow = (row) => ({
   source: row.source,
   createdBy: row.created_by,
   createdByUserId: row.created_by_user_id ?? null,
+  externalEvents: parseExternalEvents(row.external_events),
   status: row.status,
   createdAt: row.created_at,
 });
@@ -97,6 +112,11 @@ export const initScheduledMeetingStore = async () => {
   `);
 
   await pool.query(`
+    ALTER TABLE ${MEETINGS_TABLE}
+    ADD COLUMN IF NOT EXISTS external_events JSONB NOT NULL DEFAULT '[]'::jsonb
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS ${NOTIFICATIONS_TABLE} (
       id BIGSERIAL PRIMARY KEY,
       meeting_id BIGINT NOT NULL REFERENCES ${MEETINGS_TABLE}(id) ON DELETE CASCADE,
@@ -145,6 +165,7 @@ export const createScheduledMeetingWithNotifications = async (payload = {}) => {
     source = 'Farol SDR',
     createdBy = null,
     createdByUserId = null,
+    externalEvents = [],
   } = payload;
 
   if (!assessor || !cliente || !meetingDate || !meetingTime || !phoneCliente || !phoneAssessor) {
@@ -160,8 +181,20 @@ export const createScheduledMeetingWithNotifications = async (payload = {}) => {
     const meetingResult = await client.query(
       `
       INSERT INTO ${MEETINGS_TABLE}
-        (assessor, cliente, meeting_date, meeting_time, meeting_at, phone_cliente, phone_assessor, source, created_by, created_by_user_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (
+          assessor,
+          cliente,
+          meeting_date,
+          meeting_time,
+          meeting_at,
+          phone_cliente,
+          phone_assessor,
+          source,
+          created_by,
+          created_by_user_id,
+          external_events
+        )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
       RETURNING *
       `,
       [
@@ -175,6 +208,7 @@ export const createScheduledMeetingWithNotifications = async (payload = {}) => {
         source,
         createdBy,
         createdByUserId,
+        JSON.stringify(Array.isArray(externalEvents) ? externalEvents : []),
       ]
     );
 
@@ -299,7 +333,39 @@ const cancelScheduledMeetingRecord = async (meetingId, client = pool) => {
   return mapMeetingRow(meetingResult.rows[0]);
 };
 
-export const cancelScheduledMeetingForUser = async (id, user = {}) => {
+const buildVisibilityPredicate = (user = {}, startIndex = 1, alias = '') => {
+  if (user?.role === 'admin') {
+    return { sql: 'TRUE', values: [] };
+  }
+
+  const prefix = alias ? `${alias}.` : '';
+  const values = [];
+  const predicates = [];
+  let index = startIndex;
+
+  const userId = Number(user?.sub);
+  if (Number.isFinite(userId) && userId > 0) {
+    predicates.push(`${prefix}created_by_user_id = $${index++}`);
+    values.push(userId);
+  }
+
+  const login = normalizeLogin(user?.login);
+  if (login) {
+    predicates.push(`LOWER(${prefix}created_by) = $${index++}`);
+    values.push(login);
+  }
+
+  if (!predicates.length) {
+    return { sql: 'FALSE', values: [] };
+  }
+
+  return {
+    sql: `(${predicates.join(' OR ')})`,
+    values,
+  };
+};
+
+export const cancelScheduledMeetingForUser = async (id, user = {}, options = {}) => {
   if (!pool) throw new Error('PostgreSQL não configurado.');
 
   const meetingId = Number(id);
@@ -331,6 +397,9 @@ export const cancelScheduledMeetingForUser = async (id, user = {}) => {
   const dbClient = await pool.connect();
   try {
     await dbClient.query('BEGIN');
+    if (typeof options.beforeCommit === 'function') {
+      await options.beforeCommit(meeting, dbClient);
+    }
     const cancelled = await cancelScheduledMeetingRecord(meetingId, dbClient);
     if (!cancelled) {
       await dbClient.query('ROLLBACK');
@@ -394,7 +463,7 @@ const reschedulePendingNotifications = async (meetingRow, meetingAt, client) => 
   }
 };
 
-export const rescheduleScheduledMeetingForUser = async (id, payload = {}, user = {}) => {
+export const rescheduleScheduledMeetingForUser = async (id, payload = {}, user = {}, options = {}) => {
   if (!pool) throw new Error('PostgreSQL não configurado.');
 
   const meetingId = Number(id);
@@ -447,6 +516,30 @@ export const rescheduleScheduledMeetingForUser = async (id, payload = {}, user =
       return { ok: false, code: 'CONFLICT', error: 'Não foi possível remarcar a reunião.' };
     }
 
+    if (typeof options.beforeCommit === 'function') {
+      const syncResult = await options.beforeCommit(
+        meeting,
+        {
+          meetingDate,
+          meetingTime,
+          meetingAt,
+        },
+        dbClient
+      );
+
+      if (Array.isArray(syncResult?.externalEvents)) {
+        await dbClient.query(
+          `
+          UPDATE ${MEETINGS_TABLE}
+          SET external_events = $2::jsonb
+          WHERE id = $1
+          `,
+          [meetingId, JSON.stringify(syncResult.externalEvents)]
+        );
+        meetingResult.rows[0].external_events = syncResult.externalEvents;
+      }
+    }
+
     await reschedulePendingNotifications(meetingResult.rows[0], meetingAt, dbClient);
     await dbClient.query('COMMIT');
 
@@ -459,38 +552,82 @@ export const rescheduleScheduledMeetingForUser = async (id, payload = {}, user =
   }
 };
 
-export const listScheduledMeetings = async ({ limit = 100, status = MEETING_STATUS.SCHEDULED } = {}) => {
+export const updateScheduledMeetingExternalEvents = async (id, externalEvents = [], client = pool) => {
+  const result = await client.query(
+    `
+    UPDATE ${MEETINGS_TABLE}
+    SET external_events = $2::jsonb
+    WHERE id = $1
+    RETURNING *
+    `,
+    [Number(id), JSON.stringify(Array.isArray(externalEvents) ? externalEvents : [])]
+  );
+
+  return result.rows[0] ? mapMeetingRow(result.rows[0]) : null;
+};
+
+export const listScheduledMeetings = async ({
+  limit = 100,
+  status = MEETING_STATUS.SCHEDULED,
+  user = {},
+} = {}) => {
   if (!pool) throw new Error('PostgreSQL não configurado.');
   const boundedLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
+  const values = [];
+  let index = 1;
+  const conditions = [];
+
+  if (status) {
+    conditions.push(`status = $${index++}`);
+    values.push(status);
+  }
+
+  const visibility = buildVisibilityPredicate(user, index);
+  conditions.push(visibility.sql);
+  values.push(...visibility.values);
+  index += visibility.values.length;
 
   const result = await pool.query(
     `
     SELECT *
     FROM ${MEETINGS_TABLE}
-    WHERE ($1::text IS NULL OR status = $1)
+    WHERE ${conditions.join(' AND ')}
     ORDER BY meeting_at ASC
-    LIMIT $2
+    LIMIT $${index}
     `,
-    [status || null, boundedLimit]
+    [...values, boundedLimit]
   );
 
   return result.rows.map(mapMeetingRow);
 };
 
-export const listScheduledNotifications = async ({ limit = 200, status = null } = {}) => {
+export const listScheduledNotifications = async ({ limit = 200, status = null, user = {} } = {}) => {
   if (!pool) throw new Error('PostgreSQL não configurado.');
   const boundedLimit = Math.max(1, Math.min(Number(limit) || 200, 500));
+  const values = [];
+  let index = 1;
+  const conditions = [];
+
+  if (status) {
+    conditions.push(`n.status = $${index++}`);
+    values.push(status);
+  }
+
+  const visibility = buildVisibilityPredicate(user, index, 'm');
+  conditions.push(visibility.sql);
+  values.push(...visibility.values);
+  index += visibility.values.length;
 
   const result = await pool.query(
     `
     SELECT n.*, m.meeting_at, m.assessor, m.cliente, m.meeting_date, m.meeting_time, m.status AS meeting_status
     FROM ${NOTIFICATIONS_TABLE} n
     JOIN ${MEETINGS_TABLE} m ON m.id = n.meeting_id
-    WHERE ($1::text IS NULL OR n.status = $1)
+    WHERE ${conditions.join(' AND ')}
     ORDER BY n.scheduled_at ASC
-    LIMIT $2
+    LIMIT $${index}
     `,
-    [status || null, boundedLimit]
+    [...values, boundedLimit]
   );
 
   return result.rows.map(mapNotificationRow);

@@ -48,12 +48,17 @@ import {
   processPendingNotifications,
   rescheduleScheduledMeetingForUser,
 } from './scheduled-meetings-db.mjs';
+import {
+  createCalendarEvents,
+  deleteCalendarEvents,
+  rescheduleCalendarEvents,
+  rollbackCreatedCalendarEvents,
+} from './calendar-events-service.mjs';
 import { MEETING_STATUS } from './schedule-constants.mjs';
 import { normalizeLogin, withMeetingPermissions } from './schedule-auth.mjs';
 import { sendEvolutionText, isEvolutionConfigured } from './evolution-send.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, '..');
 
 const PORT = Number(process.env.PORT || 3006);
 const API_BASE = (process.env.CALENDAR_API_BASE_URL || 'https://xltw-api6-8lww.b2.xano.io/api:5ONttZdQ').replace(/\/$/, '');
@@ -445,6 +450,7 @@ app.get('/api/scheduled-meetings', authRequired, async (req, res) => {
     const rows = await listScheduledMeetings({
       limit: req.query.limit,
       status: meetingStatus,
+      user: req.user,
     });
     return res.json({
       ok: true,
@@ -463,6 +469,7 @@ app.get('/api/scheduled-notifications', authRequired, async (req, res) => {
     const rows = await listScheduledNotifications({
       limit: req.query.limit,
       status: req.query.status || null,
+      user: req.user,
     });
     return res.json({ ok: true, rows });
   } catch (error) {
@@ -474,14 +481,21 @@ app.post('/api/scheduled-meetings', authRequired, async (req, res) => {
   if (!isPostgresConfigured()) {
     return res.status(503).json({ error: 'PostgreSQL não configurado no servidor.' });
   }
+  let externalEvents = [];
   try {
+    const { calendarPlan = [], ...body } = req.body || {};
+    externalEvents = await createCalendarEvents(calendarPlan, body.meetingDate, body.meetingTime);
     const payload = await createScheduledMeetingWithNotifications({
-      ...req.body,
+      ...body,
+      externalEvents,
       createdBy: normalizeLogin(req.user?.login),
       createdByUserId: req.user?.sub ?? null,
     });
     return res.status(201).json({ ok: true, ...payload });
   } catch (error) {
+    if (externalEvents.length) {
+      await rollbackCreatedCalendarEvents(externalEvents);
+    }
     return res.status(400).json({ error: error?.message || 'Erro ao salvar agendamento.' });
   }
 });
@@ -502,7 +516,11 @@ app.post('/api/scheduled-meetings/:id/cancel', authRequired, async (req, res) =>
   }
 
   try {
-    const result = await cancelScheduledMeetingForUser(req.params.id, req.user);
+    const result = await cancelScheduledMeetingForUser(req.params.id, req.user, {
+      beforeCommit: async (meeting) => {
+        await deleteCalendarEvents(meeting.externalEvents);
+      },
+    });
     if (!result.ok) {
       const status = MEETING_ACTION_HTTP_STATUS[result.code] || 500;
       return res.status(status).json({ error: result.error });
@@ -523,7 +541,15 @@ app.patch('/api/scheduled-meetings/:id', authRequired, async (req, res) => {
   }
 
   try {
-    const result = await rescheduleScheduledMeetingForUser(req.params.id, req.body || {}, req.user);
+    const result = await rescheduleScheduledMeetingForUser(req.params.id, req.body || {}, req.user, {
+      beforeCommit: async (meeting, nextSchedule) => ({
+        externalEvents: await rescheduleCalendarEvents(
+          meeting.externalEvents,
+          nextSchedule.meetingDate,
+          nextSchedule.meetingTime
+        ),
+      }),
+    });
     if (!result.ok) {
       const status = MEETING_ACTION_HTTP_STATUS[result.code] || 500;
       return res.status(status).json({ error: result.error });
